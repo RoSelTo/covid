@@ -21,11 +21,11 @@ export default {
   computed:{
     labelTooltip: function(){
       switch(this.dataType){
-        case "hospRatio":
+        case "hosp":
           return "Hospitalisations";
-        case "reaRatio": 
+        case "rea": 
           return "Réanimations";
-        case "dcRatio":
+        case "dc":
           return "Décès";
         case "rad":
           return "Retours à domicile";
@@ -65,20 +65,19 @@ export default {
       var that = this;
       var domainScale;
       switch(this.dataType){
-        case "hospRatio":
+        case "hosp":
           domainScale = [10,20,30,40,50];
           break;
-        case "reaRatio": 
+        case "rea": 
           domainScale =  [2,5,10,20,50];
           break;
-        case "dcRatio":
+        case "dc":
           domainScale =  [10,50,100,200,500];
           break;
         case "rad":
           domainScale =  [100,200,500,1000,2000];
           break;
       }
-      console.log(domainScale)
       var colorScale = d3.scaleThreshold()
             .domain(domainScale)
             .range(d3.schemeYlOrRd[5]);
@@ -86,16 +85,18 @@ export default {
       d3.select('#map')
         .selectAll("path")
         .attr("fill", function(d){
-            return colorScale(that.depArray[d.properties.CODE_DEPT][that.date][that.dataType]);
+            return colorScale(that.depArray[d.properties.CODE_DEPT][that.date][that.dataType + "Ratio"]);
           })
         .on("mouseover", function(e) {
-            tooltip.transition()        
-                .duration(200)      
-                .style("opacity", .9);
-            tooltip.html( "<b>Département : </b>" + e.properties.NOM_DEPT + "<br>"
-                    + "<b>"+ that.labelTooltip + " : </b>" + that.depArray[e.properties.CODE_DEPT][that.date][that.dataType] + "<br>")
-                .style("left", (d3.event.pageX + 30) + "px")     
-                .style("top", (d3.event.pageY - 30) + "px");
+          var pos = d3.select(this).node().getBoundingClientRect();
+          var ratio = Math.round(that.depArray[e.properties.CODE_DEPT][that.date][that.dataType + "Ratio"] * 100)/100;
+          tooltip.transition()        
+              .duration(200)      
+              .style("opacity", .9);
+          tooltip.html( "<b>Département : </b>" + e.properties.NOM_DEPT + "<br>"
+                  + "<b>"+ that.labelTooltip + " : </b>" + that.depArray[e.properties.CODE_DEPT][that.date][that.dataType] + " (" +  ratio + "/100000 habitants)<br>")
+              .style("left", pos.x + "px")     
+              .style("top", (pos.y - 100) + "px");
         })
         .on("mouseout", function(d) {
                 tooltip.style("opacity", 0);
@@ -138,15 +139,12 @@ a {
 
 div.tooltip {
     position: absolute;
-    text-align: center;
+    text-align: left;
     color: black;
-    width: 275px;
-    height: 37px;
-    padding: 2px;
-    font: 12px sans-serif;
-    background: grey;
+    padding: 20px;
+    font: 14px sans-serif;
+    background: white;
     border: 0px;
-    border-radius: 8px;
     pointer-events: none;
     opacity: 0;
 }

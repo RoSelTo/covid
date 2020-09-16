@@ -5,10 +5,10 @@
       <div class="col-md-6">
       <label for="dataType">Type</label>
       <select class="form-control col-md-3" name="dataType" v-model="dataType" style="display:inline-block">
-        <option value="hospRatio">Hospitalisations</option>
-        <option value="reaRatio">Réanimations</option>
-        <option value="dcRatio">Décès</option>
-        <option value="rad">Retours à domicile</option>
+        <option value="hosp">Hospitalisations</option>
+        <option value="rea">Réanimations</option>
+        <option value="dc">Décès</option>
+        <!-- <option value="rad">Retours à domicile</option> -->
       </select>
       <label for="date" style="margin-left:20px">Date</label>
       <select class="form-control col-md-3" name="date" v-model="date"  style="display:inline-block">
@@ -42,7 +42,7 @@ export default {
       dayList: [],
       depPop: {},
       date: "",
-      dataType: "hospRatio",
+      dataType: "hosp",
       loading: true
     }
   },
