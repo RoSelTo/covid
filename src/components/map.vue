@@ -103,7 +103,13 @@ export default {
                 tooltip.html("")
                     .style("left", "-500px")
                     .style("top", "-500px");
+        })
+        .on("click", function(d) {
+          that.selectDep(d);
         });
+    },
+    selectDep: function(dep){
+      this.$root.$emit('selectDep', dep);
     }
   },
   mounted: function(){

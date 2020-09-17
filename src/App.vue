@@ -18,7 +18,7 @@
     </div>
     <div class="row">
       <Map ref="map" :dep-array="depArray" :total-array="totalArray" :day-list="dayList" :date="date" :data-type="dataType"/>
-      <Chart/>
+      <Chart ref="chart" :dep-array="depArray" :data-type="dataType"/>
     </div>
   </div>
 </template>
