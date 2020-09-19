@@ -50,12 +50,13 @@ export default {
     var that = this;
     var promises = [];
     var filepath = "donnees-hospitalieres-covid19.csv";
+    var filepathNew = "donnees-hospitalieres-nouveaux-covid19.csv";
     var depPath = "Departements.csv";
-    var lastDay = filepath.substring(30,40);
     promises.push(d3.dsv(";", "/" + filepath));
+    promises.push(d3.dsv(";", "/" + filepathNew));
     promises.push(d3.dsv(";", "/" + depPath));
     Promise.all(promises).then(function(values) {
-      var departementsData = values[1];
+      var departementsData = values[2];
       departementsData.forEach(function(dep) {
         that.depPop[dep.CODDEP] = {
           "id": dep.CODDEP,
@@ -98,7 +99,7 @@ export default {
         });
       that.dayList = that.dayList.reverse();
       that.date = that.dayList[0];
-
+      
       that.$nextTick(function(){
         that.loading = false;
         that.$refs.map.update();

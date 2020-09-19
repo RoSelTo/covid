@@ -1,8 +1,12 @@
 <template>
   <div class="col-6">
+    <div>
       Données du département : {{selectedDep.name}}
-    <svg id="chart" class="col-6"></svg>
-    <div class="tooltip">
+    </div>
+    <div style="height:calc(100% - 50px)">
+      <svg id="chart" style="height:100%;width:100%"></svg>
+      <div class="tooltip">
+    </div>
     </div>
   </div>
 </template>
@@ -27,7 +31,7 @@ export default {
       if(this.selectedDep != null && that.depArray[this.selectedDep.id]){
         Object.keys(that.depArray[that.selectedDep.id]).forEach(function(date){
           result.push({
-            date: d3.timeParse("%Y-%m-%d")(date),
+            date: d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date),
             value: that.depArray[that.selectedDep.id][date][that.dataType]
           });
         });
@@ -37,11 +41,13 @@ export default {
   },
   methods: {
     updateChart:function(){
+      var dimensions = d3.select("#chart").node().getBoundingClientRect();
       var margin = {top: 10, right: 30, bottom: 30, left: 60},
-        width = 460 - margin.left - margin.right,
-        height = 400 - margin.top - margin.bottom;
+        width =  dimensions.width - margin.left - margin.right,
+        height = dimensions.height - margin.top - margin.bottom;
         d3.select("#chart").select("g").remove();
       var svg = d3.select("#chart")
+                  .style("font-size", "14px")
                   .attr("width", width + margin.left + margin.right)
                   .attr("height", height + margin.top + margin.bottom)
                 .append("g")
@@ -52,6 +58,7 @@ export default {
         .domain(d3.extent(this.depData, function(d) { return d.date; }))
         .range([ 0, width ]);
       svg.append("g")
+        .attr("class", "axis")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x));
 
@@ -60,6 +67,7 @@ export default {
         .domain([0, d3.max(this.depData, function(d) { return +d.value; })])
         .range([ height, 0 ]);
       svg.append("g")
+        .attr("class", "axis")
         .call(d3.axisLeft(y));
 
       // Add the line
@@ -88,3 +96,10 @@ export default {
   }
 }
 </script>
+
+<style>
+  .axis{
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+  }
+</style>
