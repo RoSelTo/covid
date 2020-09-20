@@ -14,6 +14,7 @@
       <select class="form-control col-md-3" name="date" v-model="date"  style="display:inline-block">
         <option v-for="day in dayList" v-bind:key="day" v-bind:value="day">{{ day }}</option>
       </select>
+      <button class="btn btn-primary" v-on:click="startAnimation">Animation</button>
     </div>
     </div>
     <div class="row">
@@ -28,6 +29,7 @@ import * as d3 from 'd3'
 import { Promise } from 'q';
 import Map from './components/map.vue'
 import Chart from './components/chart.vue'
+import { setTimeout } from 'timers';
 
 export default {
   name: 'App',
@@ -44,6 +46,18 @@ export default {
       date: "",
       dataType: "hosp",
       loading: true
+    }
+  },
+  methods: {
+    startAnimation: function(){
+      var that = this;
+      var copyDayList = $.extend([], that.dayList);
+      copyDayList = copyDayList.reverse();
+      copyDayList.forEach(function(day, index){
+        setTimeout(function(){
+          that.date = day;
+        },index * 200);
+      });
     }
   },
   mounted: function(){
