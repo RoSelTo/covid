@@ -1,8 +1,11 @@
 <template>
   <div class="col-6">
-    <div>
+    <h3 v-if="selectedDep != ''">
       Données du département : {{selectedDep.name}}
-    </div>
+    </h3>
+    <h3 v-else>
+      Données France
+    </h3>
     <div style="height:calc(100% - 50px)">
       <svg id="chart" style="height:100%;width:100%"></svg>
       <div class="tooltip">
@@ -17,7 +20,8 @@ export default {
   name: 'Chart',
   props: {
     depArray: Object,
-    dataType: String
+    dataType: String,
+    totalArray: Object
   },
   data:function(){
     return {
@@ -37,10 +41,21 @@ export default {
         });
       }
       return result;
+    },
+    totalData: function(){
+      var that = this;
+      var result = [];
+        Object.keys(that.totalArray).forEach(function(date){
+          result.push({
+            date: d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date),
+            value: that.totalArray[date][that.dataType]
+          });
+        });
+      return result;
     }
   },
   methods: {
-    updateChart:function(){
+    updateChart:function(data){
       var dimensions = d3.select("#chart").node().getBoundingClientRect();
       var margin = {top: 10, right: 30, bottom: 30, left: 60},
         width =  dimensions.width - margin.left - margin.right,
@@ -55,7 +70,7 @@ export default {
                         "translate(" + margin.left + "," + margin.top + ")");
       // Add X axis --> it is a date format
       var x = d3.scaleTime()
-        .domain(d3.extent(this.depData, function(d) { return d.date; }))
+        .domain(d3.extent(data, function(d) { return d.date; }))
         .range([ 0, width ]);
       svg.append("g")
         .attr("class", "axis")
@@ -64,7 +79,7 @@ export default {
 
       // Add Y axis
       var y = d3.scaleLinear()
-        .domain([0, d3.max(this.depData, function(d) { return +d.value; })])
+        .domain([0, d3.max(data, function(d) { return +d.value; })])
         .range([ height, 0 ]);
       svg.append("g")
         .attr("class", "axis")
@@ -72,7 +87,7 @@ export default {
 
       // Add the line
       svg.append("path")
-        .datum(this.depData)
+        .datum(data)
         .attr("fill", "none")
         .attr("stroke", "steelblue")
         .attr("stroke-width", 1.5)
@@ -80,6 +95,9 @@ export default {
           .x(function(d) { return x(d.date) })
           .y(function(d) { return y(d.value) })
           )
+    },
+    create: function(){
+      this.updateChart(this.totalData);
     }
   },
   mounted: function(){
@@ -90,9 +108,17 @@ export default {
         name: dep.properties.NOM_DEPT
       }
       that.$nextTick(function(){
-        that.updateChart();
+        that.updateChart(that.depData);
       })
     })
+  },
+  watch: {
+    dataType: function(){
+      if(this.selectedDep != "")
+        this.updateChart(this.depData);
+      else
+        this.create();
+    }
   }
 }
 </script>

@@ -19,7 +19,7 @@
     </div>
     <div class="row">
       <Map ref="map" :dep-array="depArray" :total-array="totalArray" :day-list="dayList" :date="date" :data-type="dataType"/>
-      <Chart ref="chart" :dep-array="depArray" :data-type="dataType"/>
+      <Chart ref="chart" :dep-array="depArray" :total-array="totalArray" :data-type="dataType"/>
     </div>
   </div>
 </template>
@@ -101,7 +101,11 @@ export default {
               "hosp": parseInt(element.hosp),
               "rea": parseInt(element.rea),
               "dc": parseInt(element.dc),
-              "rad": parseInt(element.rad)
+              "rad": parseInt(element.rad),
+              "incid_hosp": 0,
+              "incid_rea": 0,
+              "incid_dc": 0,
+              "incid_rad": 0
             };
           } else {
             that.totalArray[element.jour].hosp += parseInt(element.hosp);
@@ -111,12 +115,24 @@ export default {
           }
           }
         });
+
+        var covidDataIncid = values[1];
+        // covid data incid
+        covidDataIncid.forEach(function(element) {
+          if(that.totalArray[element.jour] != undefined) {
+            that.totalArray[element.jour].incid_hosp += parseInt(element.incid_hosp);
+            that.totalArray[element.jour].incid_rea += parseInt(element.incid_rea);
+            that.totalArray[element.jour].incid_dc += parseInt(element.incid_dc);
+            that.totalArray[element.jour].incid_rad += parseInt(element.incid_rad);
+          }
+        });
       that.dayList = that.dayList.reverse();
       that.date = that.dayList[0];
       
       that.$nextTick(function(){
         that.loading = false;
         that.$refs.map.update();
+        that.$refs.chart.create();
       })
     });
   }
