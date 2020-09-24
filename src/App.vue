@@ -93,7 +93,11 @@ export default {
               "reaRatio": parseInt(element.rea)/popRatio,
               "dc": parseInt(element.dc),
               "dcRatio": parseInt(element.dc)/popRatio,
-              "rad": parseInt(element.rad)
+              "rad": parseInt(element.rad),
+              "incid_hosp": 0,
+              "incid_rea": 0,
+              "incid_dc": 0,
+              "incid_rad": 0
           };
           if(that.totalArray[element.jour] == undefined) {
             that.dayList.push(element.jour);
@@ -119,6 +123,13 @@ export default {
         var covidDataIncid = values[1];
         // covid data incid
         covidDataIncid.forEach(function(element) {
+          if(that.depArray[element.dep][element.jour] != undefined) {
+            that.depArray[element.dep][element.jour].incid_hosp += parseInt(element.incid_hosp);
+            that.depArray[element.dep][element.jour].incid_rea += parseInt(element.incid_rea);
+            that.depArray[element.dep][element.jour].incid_dc += parseInt(element.incid_dc);
+            that.depArray[element.dep][element.jour].incid_rad += parseInt(element.incid_rad);
+          }
+
           if(that.totalArray[element.jour] != undefined) {
             that.totalArray[element.jour].incid_hosp += parseInt(element.incid_hosp);
             that.totalArray[element.jour].incid_rea += parseInt(element.incid_rea);

@@ -36,7 +36,8 @@ export default {
         Object.keys(that.depArray[that.selectedDep.id]).forEach(function(date){
           result.push({
             date: d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date),
-            value: that.depArray[that.selectedDep.id][date][that.dataType]
+            value: that.depArray[that.selectedDep.id][date][that.dataType],
+            valueIncid: that.depArray[that.selectedDep.id][date]["incid_" + that.dataType]
           });
         });
       }
@@ -48,7 +49,8 @@ export default {
         Object.keys(that.totalArray).forEach(function(date){
           result.push({
             date: d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date),
-            value: that.totalArray[date][that.dataType]
+            value: that.totalArray[date][that.dataType],
+            valueIncid: that.totalArray[date]["incid_" + that.dataType]
           });
         });
       return result;
@@ -57,7 +59,7 @@ export default {
   methods: {
     updateChart:function(data){
       var dimensions = d3.select("#chart").node().getBoundingClientRect();
-      var margin = {top: 10, right: 30, bottom: 30, left: 60},
+      var margin = {top: 10, right: 60, bottom: 30, left: 60},
         width =  dimensions.width - margin.left - margin.right,
         height = dimensions.height - margin.top - margin.bottom;
         d3.select("#chart").select("g").remove();
@@ -78,12 +80,21 @@ export default {
         .call(d3.axisBottom(x));
 
       // Add Y axis
-      var y = d3.scaleLinear()
+      var y0 = d3.scaleLinear()
         .domain([0, d3.max(data, function(d) { return +d.value; })])
         .range([ height, 0 ]);
       svg.append("g")
         .attr("class", "axis")
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y0));
+
+      // Add secondary Y axis
+        var y1 = d3.scaleLinear()
+        .domain([0, d3.max(data, function(d) { return +d.valueIncid; })])
+        .range([ height, 0 ]);
+      svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate( " + width + ", 0 )")
+        .call(d3.axisRight(y1));
 
       // Add the line
       svg.append("path")
@@ -93,7 +104,16 @@ export default {
         .attr("stroke-width", 1.5)
         .attr("d", d3.line()
           .x(function(d) { return x(d.date) })
-          .y(function(d) { return y(d.value) })
+          .y(function(d) { return y0(d.value) })
+          )
+      svg.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+          .x(function(d) { return x(d.date) })
+          .y(function(d) { return y1(d.valueIncid) })
           )
     },
     create: function(){

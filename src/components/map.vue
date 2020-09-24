@@ -147,11 +147,13 @@ div.tooltip {
     position: absolute;
     text-align: left;
     color: black;
-    padding: 20px;
+    padding: 12px;
     font: 14px sans-serif;
     background: white;
     border: 0px;
     pointer-events: none;
     opacity: 0;
+    box-shadow: 0 1px 3px 0 #d4d4d5, 0 0 0 1px #d4d4d5;
+    line-height: 20px;
 }
 </style>
