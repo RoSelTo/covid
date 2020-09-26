@@ -3,23 +3,26 @@
     <h1>Données hospitalières covid</h1>
     <div class="row">
       <div class="col-md-6">
-      <label for="dataType">Type</label>
-      <select class="form-control col-md-3" name="dataType" v-model="dataType" style="display:inline-block">
-        <option value="hosp">Hospitalisations</option>
-        <option value="rea">Réanimations</option>
-        <option value="dc">Décès</option>
-        <!-- <option value="rad">Retours à domicile</option> -->
-      </select>
-      <label for="date" style="margin-left:20px">Date</label>
-      <select class="form-control col-md-3" name="date" v-model="date"  style="display:inline-block">
-        <option v-for="day in dayList" v-bind:key="day" v-bind:value="day">{{ day }}</option>
-      </select>
-      <button class="btn btn-primary" v-on:click="startAnimation">Animation</button>
-    </div>
+        <label for="dataType">Type</label>
+        <select class="form-control col-md-3" name="dataType" v-model="dataType" style="display:inline-block">
+          <option value="hosp">Hospitalisations</option>
+          <option value="rea">Réanimations</option>
+          <option value="dc">Décès</option>
+          <!-- <option value="rad">Retours à domicile</option> -->
+        </select>
+        <label for="date" style="margin-left:20px">Date</label>
+        <select class="form-control col-md-3" name="date" v-model="date"  style="display:inline-block">
+          <option v-for="day in dayList" v-bind:key="day" v-bind:value="day">{{ day }}</option>
+        </select>
+        <button class="btn btn-primary" v-on:click="startAnimation"><font-awesome-icon icon="play" style="margin-right:5px" />Animation</button>
+      </div>
+      <div class="col-md-6">
+        <button class="btn btn-primary" v-on:click="selectedDep = null"><font-awesome-icon icon="home" style="margin-right:5px" />Retour vers France</button>
+      </div>
     </div>
     <div class="row">
-      <Map ref="map" :dep-array="depArray" :total-array="totalArray" :day-list="dayList" :date="date" :data-type="dataType"/>
-      <Chart ref="chart" :dep-array="depArray" :total-array="totalArray" :data-type="dataType"/>
+      <Map ref="map" :dep-array="depArray" :total-array="totalArray" :day-list="dayList" :date="date" :data-type="dataType" :selected-dep="selectedDep" v-on:select-dep="selectDep"/>
+      <Chart ref="chart" :dep-array="depArray" :total-array="totalArray" :data-type="dataType" :selected-dep="selectedDep"/>
     </div>
   </div>
 </template>
@@ -29,7 +32,6 @@ import * as d3 from 'd3'
 import { Promise } from 'q';
 import Map from './components/map.vue'
 import Chart from './components/chart.vue'
-import { setTimeout } from 'timers';
 
 export default {
   name: 'App',
@@ -45,6 +47,7 @@ export default {
       depPop: {},
       date: "",
       dataType: "hosp",
+      selectedDep: null,
       loading: true
     }
   },
@@ -58,16 +61,21 @@ export default {
           that.date = day;
         },index * 200);
       });
+    },
+    selectDep: function(dep){
+      console.log(dep);
+      this.selectedDep = {
+        id: dep.properties.CODE_DEPT,
+        name: dep.properties.NOM_DEPT
+      }
     }
   },
   mounted: function(){
     var that = this;
     var promises = [];
-    var filepath = "donnees-hospitalieres-covid19.csv";
-    var filepathNew = "donnees-hospitalieres-nouveaux-covid19.csv";
     var depPath = "Departements.csv";
-    promises.push(d3.dsv(";", "/" + filepath));
-    promises.push(d3.dsv(";", "/" + filepathNew));
+    promises.push(d3.dsv(";", "https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7"));
+    promises.push(d3.dsv(";", "https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"));
     promises.push(d3.dsv(";", "/" + depPath));
     Promise.all(promises).then(function(values) {
       var departementsData = values[2];

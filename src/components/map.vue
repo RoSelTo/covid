@@ -16,7 +16,8 @@ export default {
     totalArray: Object,
     dayList: Array,
     date: String,
-    dataType: String
+    dataType: String,
+    selectedDep: Object
   },
   computed:{
     labelTooltip: function(){
@@ -104,12 +105,9 @@ export default {
                     .style("left", "-500px")
                     .style("top", "-500px");
         })
-        .on("click", function(d) {
-          that.selectDep(d);
+        .on("click", function(dep) {
+          that.$emit('select-dep', dep);
         });
-    },
-    selectDep: function(dep){
-      this.$root.$emit('selectDep', dep);
     }
   },
   mounted: function(){

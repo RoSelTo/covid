@@ -1,6 +1,6 @@
 <template>
   <div class="col-6">
-    <h3 v-if="selectedDep != ''">
+    <h3 v-if="selectedDep != null">
       Données du département : {{selectedDep.name}}
     </h3>
     <h3 v-else>
@@ -21,14 +21,35 @@ export default {
   props: {
     depArray: Object,
     dataType: String,
-    totalArray: Object
-  },
-  data:function(){
-    return {
-      selectedDep: ""
-    }
+    totalArray: Object,
+    selectedDep: Object
   },
   computed:{
+    labelTooltip: function(){
+      switch(this.dataType){
+        case "hosp":
+          return {
+            y0:"Hospitalisations",
+            y1: "Nouvelles hospitalisations"
+            };
+        case "rea": 
+          return {
+            y0:"Réanimations",
+            y1: "Nouvelles réanimations"
+            };
+        case "dc":
+          return {
+            y0:"Décès",
+            y1: "Nouveaux décès"
+            };
+        case "rad":
+          return "Retours à domicile";
+          return {
+            y0:"Retours à domicile",
+            y1: "Nouveaux retours à domicile"
+            };
+      }
+    },
     depData: function(){
       var that = this;
       var result = [];
@@ -115,26 +136,28 @@ export default {
           .x(function(d) { return x(d.date) })
           .y(function(d) { return y1(d.valueIncid) })
           )
+
+        // Add legend
+        svg.append("circle").attr("cx",width - 190).attr("cy",50).attr("r", 6).style("fill", "steelblue")
+        svg.append("circle").attr("cx",width - 190).attr("cy",70).attr("r", 6).style("fill", "red")
+        svg.append("text").attr("x", width - 180).attr("y", 50).text(this.labelTooltip.y0).style("font-size", "15px").attr("alignment-baseline","middle")
+        svg.append("text").attr("x", width - 180).attr("y", 70).text(this.labelTooltip.y1).style("font-size", "15px").attr("alignment-baseline","middle")
     },
     create: function(){
       this.updateChart(this.totalData);
     }
   },
   mounted: function(){
-    var that = this;
-    this.$root.$on("selectDep", function(dep){
-      that.selectedDep = {
-        id: dep.properties.CODE_DEPT,
-        name: dep.properties.NOM_DEPT
-      }
-      that.$nextTick(function(){
-        that.updateChart(that.depData);
-      })
-    })
   },
   watch: {
     dataType: function(){
-      if(this.selectedDep != "")
+      if(this.selectedDep != null)
+        this.updateChart(this.depData);
+      else
+        this.create();
+    },
+    selectedDep: function() {
+      if(this.selectedDep != null)
         this.updateChart(this.depData);
       else
         this.create();
