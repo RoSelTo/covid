@@ -17,11 +17,11 @@
         <button class="btn btn-primary" v-on:click="startAnimation"><font-awesome-icon icon="play" style="margin-right:5px" />Animation</button>
       </div>
       <div class="col-md-6">
-        <button class="btn btn-primary" v-on:click="selectedDep = null"><font-awesome-icon icon="home" style="margin-right:5px" />Retour vers France</button>
+        <button class="btn btn-primary" v-if="selectedDep != null" v-on:click="selectedDep = null"><font-awesome-icon icon="home" style="margin-right:5px" />Retour vers France</button>
       </div>
     </div>
     <div class="row">
-      <Map ref="map" :dep-array="depArray" :total-array="totalArray" :day-list="dayList" :date="date" :data-type="dataType" :selected-dep="selectedDep" v-on:select-dep="selectDep"/>
+      <Map ref="map" :dep-array="depArray" :total-array="totalArray" :day-list="dayList" :date="date" :data-type="dataType" v-on:select-dep="selectDep"/>
       <Chart ref="chart" :dep-array="depArray" :total-array="totalArray" :data-type="dataType" :selected-dep="selectedDep"/>
     </div>
   </div>
@@ -63,7 +63,6 @@ export default {
       });
     },
     selectDep: function(dep){
-      console.log(dep);
       this.selectedDep = {
         id: dep.properties.CODE_DEPT,
         name: dep.properties.NOM_DEPT

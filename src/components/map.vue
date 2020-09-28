@@ -16,8 +16,7 @@ export default {
     totalArray: Object,
     dayList: Array,
     date: String,
-    dataType: String,
-    selectedDep: Object
+    dataType: String
   },
   computed:{
     labelTooltip: function(){
