@@ -137,6 +137,45 @@ export default {
           .x(function(d) { return x(d.date) })
           .y(function(d) { return y1(d.valueIncid) })
           )
+      
+      var movingAverage = movingAvg(data, 7);
+      function movingAvg(array, count){
+        // calculate average for subarray
+        var avg = function(array){
+            var sum = 0, count = 0, val;
+            for (var i in array){
+              sum += array[i].valueIncid;
+              count++;
+            }
+            return sum / count;
+        };
+
+        var result = [], val;
+        // pad beginning of result with null values
+        for (var i=0; i < count-1; i++)
+            result.push({date: array[i].date, movingAverage: null});
+
+        // calculate average for each subarray and add to result
+        for (var i=0, len=array.length - count; i < len; i++){
+            val = avg(array.slice(i, i + count));
+            if (isNaN(val))
+                result.push({date: array[i+count].date, movingAverage: null});
+            else
+                result.push({date: array[i+count].date, movingAverage: val});
+        }
+
+        return result;
+    }
+      svg.append("path")
+        .datum(movingAverage)
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-dasharray", ("3, 3"))
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+          .x(function(d) { return x(d.date) })
+          .y(function(d) { return y1(d.movingAverage) })
+          )
 
       var tooltip = d3.select("#tooltip");
 
@@ -209,9 +248,9 @@ export default {
             d3.select(this).attr("transform", "translate(" + x(data[idx].date) + "," + y + ")");
           });
           
-          var evol = idx > 0 ? data[idx].value - data[idx - 1].value > 0 ? " (+" + (data[idx].value - data[idx - 1].value) + ")" : " (" + (data[idx].value - data[idx - 1].value) + ")" : "";
-          var evolIncid = idx > 0 ? data[idx].valueIncid - data[idx - 1].valueIncid > 0 ? " (+" + (data[idx].valueIncid - data[idx - 1].valueIncid) + ")" : " (" + (data[idx].valueIncid - data[idx - 1].valueIncid) + ")" : "";
-          var left = mouse[0] + 300 > width ? mouse[0] - 250 : mouse[0] + 100;
+          var evol = idx > 0 ? data[idx].value - data[idx - 1].value > 0 ? " (+" + (data[idx].value - data[idx - 1].value) + " par rapport à la veille)" : " (" + (data[idx].value - data[idx - 1].value) + " par rapport à la veille)" : "";
+          var evolIncid = idx > 6 ? data[idx].valueIncid - data[idx - 7].valueIncid > 0 ? " (+" + (data[idx].valueIncid - data[idx - 7].valueIncid) + " sur 7 jours)" : " (" + (data[idx].valueIncid - data[idx - 7].valueIncid) + " sur 7 jours)" : "";
+          var left = mouse[0] + 370 > width ? mouse[0] - 320 : mouse[0] + 100;
           tooltip
             .style('left', left + "px")
             .style('top', (mouse[1]) + "px")
@@ -287,6 +326,6 @@ export default {
     opacity: 0;
     box-shadow: 0 1px 3px 0 #d4d4d5, 0 0 0 1px #d4d4d5;
     line-height: 20px;
-    width: 300px;
+    width: 370px;
   }
 </style>
