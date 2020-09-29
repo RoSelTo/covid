@@ -209,19 +209,21 @@ export default {
             d3.select(this).attr("transform", "translate(" + x(data[idx].date) + "," + y + ")");
           });
           
+          var evol = idx > 0 ? data[idx].value - data[idx - 1].value > 0 ? " (+" + (data[idx].value - data[idx - 1].value) + ")" : " (" + (data[idx].value - data[idx - 1].value) + ")" : "";
+          var evolIncid = idx > 0 ? data[idx].valueIncid - data[idx - 1].valueIncid > 0 ? " (+" + (data[idx].valueIncid - data[idx - 1].valueIncid) + ")" : " (" + (data[idx].valueIncid - data[idx - 1].valueIncid) + ")" : "";
+          var left = mouse[0] + 300 > width ? mouse[0] - 250 : mouse[0] + 100;
           tooltip
-            .style('left', (mouse[0] + 70) + "px")
-            .style('top', (mouse[1] - 30) + "px")
-            .html("<div>" + GetFormattedDate(data[idx].date) + "</div>" + 
-                  "<div>" + that.labelTooltip.y0 + " : " + data[idx].value + "</div>" +
-                  "<div>" + that.labelTooltip.y1 + " : " + data[idx].valueIncid + "</div>");
+            .style('left', left + "px")
+            .style('top', (mouse[1]) + "px")
+            .html("<div><b>Date</b> : " + GetFormattedDate(data[idx].date) + "</div>" + 
+                  "<div><b>" + that.labelTooltip.y0 + "</b> : " + data[idx].value + evol + "</div>" +
+                  "<div><b>" + that.labelTooltip.y1 + "</b> : " + data[idx].valueIncid + evolIncid + "</div>");
    
-          function GetFormattedDate() {
-              var todayTime = new Date();
-              var month = todayTime .getMonth() + 1;
-              var day = todayTime .getDate();
-              var year = todayTime .getFullYear();
-              return month + "/" + day + "/" + year;
+          function GetFormattedDate(date) {
+              var month = ("0" + (date.getMonth() + 1)).slice(-2);
+              var day = ("0" + date.getDate()).slice(-2);
+              var year = date.getFullYear();
+              return day + "/" + month + "/" + year;
           }
         })
 
@@ -285,5 +287,6 @@ export default {
     opacity: 0;
     box-shadow: 0 1px 3px 0 #d4d4d5, 0 0 0 1px #d4d4d5;
     line-height: 20px;
+    width: 300px;
   }
 </style>
