@@ -93,7 +93,7 @@ export default {
       var result = [];
       if(this.selectedDep != null && that.depArray[this.selectedDep.id]){
         Object.keys(that.depArray[that.selectedDep.id]).forEach(function(date){
-          var parsedDate = d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date);
+          var parsedDate = d3.timeParse("%d/%m/%Y")(date);
           if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
             result.push({
               date: parsedDate,
@@ -109,7 +109,7 @@ export default {
       var that = this;
       var result = [];
         Object.keys(that.totalArray).forEach(function(date){
-          var parsedDate = d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date);
+          var parsedDate = d3.timeParse("%d/%m/%Y")(date);
           if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
             result.push({
               date: parsedDate,

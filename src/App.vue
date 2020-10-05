@@ -29,6 +29,7 @@
 <script>
 import * as d3 from 'd3'
 import { Promise } from 'q';
+import moment from 'moment'
 import Map from './components/map.vue'
 import Chart from './components/chart.vue'
 
@@ -89,58 +90,60 @@ export default {
         // covid data
         covidData.forEach(function(element) {
           if(element.sexe == "0") {
-          if(that.depArray[element.dep] == undefined)
-            that.depArray[element.dep] = {};
-          var popRatio = that.depPop[element.dep] != null ? that.depPop[element.dep].pop/100000 : 0;
-          that.depArray[element.dep][element.jour] = {
-              "hosp": parseInt(element.hosp),
-              "hospRatio": parseInt(element.hosp)/popRatio,
-              "rea": parseInt(element.rea),
-              "reaRatio": parseInt(element.rea)/popRatio,
-              "dc": parseInt(element.dc),
-              "dcRatio": parseInt(element.dc)/popRatio,
-              "rad": parseInt(element.rad),
-              "incid_hosp": 0,
-              "incid_rea": 0,
-              "incid_dc": 0,
-              "incid_rad": 0
-          };
-          if(that.totalArray[element.jour] == undefined) {
-            that.dayList.push(element.jour);
-            that.totalArray[element.jour] = {
-              "hosp": parseInt(element.hosp),
-              "rea": parseInt(element.rea),
-              "dc": parseInt(element.dc),
-              "rad": parseInt(element.rad),
-              "incid_hosp": 0,
-              "incid_rea": 0,
-              "incid_dc": 0,
-              "incid_rad": 0
+            var dateFormatted = element.jour.indexOf("-") > -1 ? moment(element.jour, "YYYY-MM-DD").format("DD/MM/YYYY") : element.jour;
+            if(that.depArray[element.dep] == undefined)
+              that.depArray[element.dep] = {};
+            var popRatio = that.depPop[element.dep] != null ? that.depPop[element.dep].pop/100000 : 0;
+            that.depArray[element.dep][dateFormatted] = {
+                "hosp": parseInt(element.hosp),
+                "hospRatio": parseInt(element.hosp)/popRatio,
+                "rea": parseInt(element.rea),
+                "reaRatio": parseInt(element.rea)/popRatio,
+                "dc": parseInt(element.dc),
+                "dcRatio": parseInt(element.dc)/popRatio,
+                "rad": parseInt(element.rad),
+                "incid_hosp": 0,
+                "incid_rea": 0,
+                "incid_dc": 0,
+                "incid_rad": 0
             };
-          } else {
-            that.totalArray[element.jour].hosp += parseInt(element.hosp);
-            that.totalArray[element.jour].rea += parseInt(element.rea);
-            that.totalArray[element.jour].dc += parseInt(element.dc);
-            that.totalArray[element.jour].rad += parseInt(element.rad);
-          }
+            if(that.totalArray[dateFormatted] == undefined) {
+              that.dayList.push(dateFormatted);
+              that.totalArray[dateFormatted] = {
+                "hosp": parseInt(element.hosp),
+                "rea": parseInt(element.rea),
+                "dc": parseInt(element.dc),
+                "rad": parseInt(element.rad),
+                "incid_hosp": 0,
+                "incid_rea": 0,
+                "incid_dc": 0,
+                "incid_rad": 0
+              };
+            } else {
+              that.totalArray[dateFormatted].hosp += parseInt(element.hosp);
+              that.totalArray[dateFormatted].rea += parseInt(element.rea);
+              that.totalArray[dateFormatted].dc += parseInt(element.dc);
+              that.totalArray[dateFormatted].rad += parseInt(element.rad);
+            }
           }
         });
 
         var covidDataIncid = values[1];
         // covid data incid
         covidDataIncid.forEach(function(element) {
-          if(that.depArray[element.dep][element.jour] != undefined) {
-            that.depArray[element.dep][element.jour].incid_hosp += parseInt(element.incid_hosp);
-            that.depArray[element.dep][element.jour].incid_rea += parseInt(element.incid_rea);
-            that.depArray[element.dep][element.jour].incid_dc += parseInt(element.incid_dc);
-            that.depArray[element.dep][element.jour].incid_rad += parseInt(element.incid_rad);
+          var dateFormatted = element.jour.indexOf("-") > -1 ? moment(element.jour, "YYYY-MM-DD").format("DD/MM/YYYY") : element.jour;
+          if(that.depArray[element.dep][dateFormatted] != undefined) {
+            that.depArray[element.dep][dateFormatted].incid_hosp += parseInt(element.incid_hosp);
+            that.depArray[element.dep][dateFormatted].incid_rea += parseInt(element.incid_rea);
+            that.depArray[element.dep][dateFormatted].incid_dc += parseInt(element.incid_dc);
+            that.depArray[element.dep][dateFormatted].incid_rad += parseInt(element.incid_rad);
           }
 
-          if(that.totalArray[element.jour] != undefined) {
-            that.totalArray[element.jour].incid_hosp += parseInt(element.incid_hosp);
-            that.totalArray[element.jour].incid_rea += parseInt(element.incid_rea);
-            that.totalArray[element.jour].incid_dc += parseInt(element.incid_dc);
-            that.totalArray[element.jour].incid_rad += parseInt(element.incid_rad);
+          if(that.totalArray[dateFormatted] != undefined) {
+            that.totalArray[dateFormatted].incid_hosp += parseInt(element.incid_hosp);
+            that.totalArray[dateFormatted].incid_rea += parseInt(element.incid_rea);
+            that.totalArray[dateFormatted].incid_dc += parseInt(element.incid_dc);
+            that.totalArray[dateFormatted].incid_rad += parseInt(element.incid_rad);
           }
         });
       that.dayList = that.dayList.reverse();
