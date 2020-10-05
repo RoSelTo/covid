@@ -1,11 +1,23 @@
 <template>
   <div class="col-6">
-    <h3 v-if="selectedDep != null">
-      Données du département : {{selectedDep.name}}
-    </h3>
-    <h3 v-else>
-      Données France
-    </h3>
+    <div class="row">
+      <div class="col-7">
+        <h3 v-if="selectedDep != null">
+          Données : {{selectedDep.name}}
+        </h3>
+        <h3 v-else>
+          Données : France
+        </h3>
+      </div>
+      <div class="col-5">
+        <label for="period" class="col-4">Période</label>
+        <select class="form-control col-6" name="period" v-model="period" style="display:inline-block">
+          <option value="all">Toute la période</option>
+          <option value="trailingMonth">Mois glissante</option>
+          <option value="currentQuarter">Trimestre en cours</option>
+        </select>
+      </div>
+    </div>
     <div style="height:calc(100% - 50px)">
       <svg id="chart" style="height:100%;width:100%"></svg>
       <div id="tooltip"></div>
@@ -15,6 +27,7 @@
 
 <script>
 import * as d3 from 'd3'
+import moment from 'moment'
 export default {
   name: 'Chart',
   props: {
@@ -22,6 +35,11 @@ export default {
     dataType: String,
     totalArray: Object,
     selectedDep: Object
+  },
+  data: function(){
+    return {
+      period: "all"
+    }
   },
   computed:{
     labelTooltip: function(){
@@ -49,16 +67,40 @@ export default {
             };
       }
     },
+    filteredDates: function(){
+      var that = this;
+      if(this.period == "all") {
+        return {
+          startDate: moment().add(-1, "years"),
+          endDate: moment()
+        }
+      }
+      if(this.period == "trailingMonth") {
+        return {
+          startDate: moment().add(-1, "months"),
+          endDate: moment()
+        }
+      }
+      if(this.period == "currentQuarter") {
+        return {
+          startDate: moment().startOf("month").add(-2, "months"),
+          endDate: moment()
+        }
+      }
+    },
     depData: function(){
       var that = this;
       var result = [];
       if(this.selectedDep != null && that.depArray[this.selectedDep.id]){
         Object.keys(that.depArray[that.selectedDep.id]).forEach(function(date){
-          result.push({
-            date: d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date),
-            value: that.depArray[that.selectedDep.id][date][that.dataType],
-            valueIncid: that.depArray[that.selectedDep.id][date]["incid_" + that.dataType]
-          });
+          var parsedDate = d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date);
+          if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
+            result.push({
+              date: parsedDate,
+              value: that.depArray[that.selectedDep.id][date][that.dataType],
+              valueIncid: that.depArray[that.selectedDep.id][date]["incid_" + that.dataType]
+            });
+          }
         });
       }
       return result;
@@ -67,11 +109,14 @@ export default {
       var that = this;
       var result = [];
         Object.keys(that.totalArray).forEach(function(date){
-          result.push({
-            date: d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date),
-            value: that.totalArray[date][that.dataType],
-            valueIncid: that.totalArray[date]["incid_" + that.dataType]
-          });
+          var parsedDate = d3.timeParse("%Y-%m-%d")(date) != null ? d3.timeParse("%Y-%m-%d")(date) : d3.timeParse("%d/%m/%Y")(date);
+          if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
+            result.push({
+              date: parsedDate,
+              value: that.totalArray[date][that.dataType],
+              valueIncid: that.totalArray[date]["incid_" + that.dataType]
+            });
+          }
         });
       return result;
     }
@@ -286,6 +331,12 @@ export default {
         this.create();
     },
     selectedDep: function() {
+      if(this.selectedDep != null)
+        this.updateChart(this.depData);
+      else
+        this.create();
+    },
+    period: function(){
       if(this.selectedDep != null)
         this.updateChart(this.depData);
       else

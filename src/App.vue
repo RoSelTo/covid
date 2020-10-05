@@ -1,20 +1,19 @@
 <template>
   <div id="app">
-    <h1>Données hospitalières covid</h1>
     <div class="row">
       <div class="col-md-6">
-        <label for="dataType">Type</label>
+        <label for="dataType" style="margin-right:10px">Type</label>
         <select class="form-control col-md-3" name="dataType" v-model="dataType" style="display:inline-block">
           <option value="hosp">Hospitalisations</option>
           <option value="rea">Réanimations</option>
           <option value="dc">Décès</option>
           <!-- <option value="rad">Retours à domicile</option> -->
         </select>
-        <label for="date" style="margin-left:20px">Date</label>
+        <label for="date" style="margin-left:20px;margin-right:10px">Date</label>
         <select class="form-control col-md-3" name="date" v-model="date"  style="display:inline-block">
           <option v-for="day in dayList" v-bind:key="day" v-bind:value="day">{{ day }}</option>
         </select>
-        <button class="btn btn-primary" v-on:click="startAnimation"><font-awesome-icon icon="play" style="margin-right:5px" />Animation</button>
+        <button class="btn btn-primary" v-on:click="startAnimation" style="margin-left:10px"><font-awesome-icon icon="play" style="margin-right:5px" />Animation</button>
       </div>
       <div class="col-md-6">
         <button class="btn btn-primary" v-if="selectedDep != null" v-on:click="selectedDep = null"><font-awesome-icon icon="home" style="margin-right:5px" />Retour vers France</button>
