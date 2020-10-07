@@ -29,6 +29,8 @@ export default {
           return "Décès";
         case "rad":
           return "Retours à domicile";
+        case "pos":
+          return "Incidence";
       }
     }
   },
@@ -76,6 +78,9 @@ export default {
           break;
         case "rad":
           domainScale =  [100,200,500,1000,2000];
+          break;
+        case "pos":
+          domainScale =  [10,50,100,150,250];
           break;
       }
       var colorScale = d3.scaleThreshold()

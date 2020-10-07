@@ -27,7 +27,7 @@
 
 <script>
 import * as d3 from 'd3'
-import moment from 'moment'
+import dayjs from 'dayjs'
 export default {
   name: 'Chart',
   props: {
@@ -65,26 +65,31 @@ export default {
             y0:"Retours à domicile",
             y1: "Nouveaux retours à domicile"
             };
+        case "pos":
+          return {
+            y0:"Incidence",
+            y1: "Cas positifs"
+            };
       }
     },
     filteredDates: function(){
       var that = this;
       if(this.period == "all") {
         return {
-          startDate: moment().add(-1, "years"),
-          endDate: moment()
+          startDate: dayjs().add(-1, "years"),
+          endDate: dayjs()
         }
       }
       if(this.period == "trailingMonth") {
         return {
-          startDate: moment().add(-1, "months"),
-          endDate: moment()
+          startDate: dayjs().add(-1, "months"),
+          endDate: dayjs()
         }
       }
       if(this.period == "currentQuarter") {
         return {
-          startDate: moment().startOf("month").add(-2, "months"),
-          endDate: moment()
+          startDate: dayjs().startOf("month").add(-2, "months"),
+          endDate: dayjs()
         }
       }
     },
@@ -93,12 +98,14 @@ export default {
       var result = [];
       if(this.selectedDep != null && that.depArray[this.selectedDep.id]){
         Object.keys(that.depArray[that.selectedDep.id]).forEach(function(date){
-          var parsedDate = d3.timeParse("%d/%m/%Y")(date);
+          var parsedDate = d3.timeParse("%Y-%m-%d")(date);
           if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
             result.push({
               date: parsedDate,
-              value: that.depArray[that.selectedDep.id][date][that.dataType],
-              valueIncid: that.depArray[that.selectedDep.id][date]["incid_" + that.dataType]
+              value: that.dataType == "pos" ? Math.round(that.depArray[that.selectedDep.id][date][that.dataType + "Ratio"] * 100)/100 
+              : that.depArray[that.selectedDep.id][date][that.dataType],
+              valueSec: that.dataType == "pos" ? that.depArray[that.selectedDep.id][date][that.dataType] 
+              : that.depArray[that.selectedDep.id][date]["incid_" + that.dataType] 
             });
           }
         });
@@ -109,12 +116,12 @@ export default {
       var that = this;
       var result = [];
         Object.keys(that.totalArray).forEach(function(date){
-          var parsedDate = d3.timeParse("%d/%m/%Y")(date);
+          var parsedDate = d3.timeParse("%Y-%m-%d")(date);
           if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
             result.push({
               date: parsedDate,
               value: that.totalArray[date][that.dataType],
-              valueIncid: that.totalArray[date]["incid_" + that.dataType]
+              valueSec: that.totalArray[date]["incid_" + that.dataType]
             });
           }
         });
@@ -156,7 +163,7 @@ export default {
 
       // Add secondary Y axis
         var y1 = d3.scaleLinear()
-        .domain([0, d3.max(data, function(d) { return +d.valueIncid; })])
+        .domain([0, d3.max(data, function(d) { return +d.valueSec; })])
         .range([ height, 0 ]);
       svg.append("g")
         .attr("class", "axis")
@@ -180,37 +187,11 @@ export default {
         .attr("stroke-width", 1.5)
         .attr("d", d3.line()
           .x(function(d) { return x(d.date) })
-          .y(function(d) { return y1(d.valueIncid) })
+          .y(function(d) { return y1(d.valueSec) })
           )
       
-      var movingAverage = movingAvg(data, 7);
-      function movingAvg(array, count){
-        // calculate average for subarray
-        var avg = function(array){
-            var sum = 0, count = 0, val;
-            for (var i in array){
-              sum += array[i].valueIncid;
-              count++;
-            }
-            return sum / count;
-        };
-
-        var result = [], val;
-        // pad beginning of result with null values
-        for (var i=0; i < count-1; i++)
-            result.push({date: array[i].date, movingAverage: null});
-
-        // calculate average for each subarray and add to result
-        for (var i=0, len=array.length - count; i < len; i++){
-            val = avg(array.slice(i, i + count));
-            if (isNaN(val))
-                result.push({date: array[i+count].date, movingAverage: null});
-            else
-                result.push({date: array[i+count].date, movingAverage: val});
-        }
-
-        return result;
-    }
+      var movingAverage = that.movingAvg(data, 7);
+      
       svg.append("path")
         .datum(movingAverage)
         .attr("fill", "none")
@@ -289,19 +270,21 @@ export default {
               });
               
           d3.selectAll(".mouse-per-line").each(function(point,i){
-            var y = i == 0 ? y0(data[idx].value) : y1(data[idx].valueIncid);
+            var y = i == 0 ? y0(data[idx].value) : y1(data[idx].valueSec);
             d3.select(this).attr("transform", "translate(" + x(data[idx].date) + "," + y + ")");
           });
           
-          var evol = idx > 0 ? data[idx].value - data[idx - 1].value > 0 ? " (+" + (data[idx].value - data[idx - 1].value) + " par rapport à la veille)" : " (" + (data[idx].value - data[idx - 1].value) + " par rapport à la veille)" : "";
-          var evolIncid = idx > 6 ? data[idx].valueIncid - data[idx - 7].valueIncid > 0 ? " (+" + (data[idx].valueIncid - data[idx - 7].valueIncid) + " sur 7 jours)" : " (" + (data[idx].valueIncid - data[idx - 7].valueIncid) + " sur 7 jours)" : "";
+          var evolValue = Math.round((data[idx].value - data[idx - 1].value) * 100) / 100;
+          var evol = idx > 0 ? evolValue > 0 ? " (+" + evolValue + " par rapport à la veille)" : " (" + evolValue + " par rapport à la veille)" : "";
+          var evolValueIncid = Math.round((data[idx].valueSec - data[idx - 1].valueSec) * 100) / 100;
+          var evolIncid = idx > 6 ? evolValueIncid > 0 ? " (+" + evolValueIncid + " sur 7 jours)" : " (" + evolValueIncid + " sur 7 jours)" : "";
           var left = mouse[0] + 370 > width ? mouse[0] - 320 : mouse[0] + 100;
           tooltip
             .style('left', left + "px")
             .style('top', (mouse[1]) + "px")
             .html("<div><b>Date</b> : " + GetFormattedDate(data[idx].date) + "</div>" + 
                   "<div><b>" + that.labelTooltip.y0 + "</b> : " + data[idx].value + evol + "</div>" +
-                  "<div><b>" + that.labelTooltip.y1 + "</b> : " + data[idx].valueIncid + evolIncid + "</div>");
+                  "<div><b>" + that.labelTooltip.y1 + "</b> : " + data[idx].valueSec + evolIncid + "</div>");
    
           function GetFormattedDate(date) {
               var month = ("0" + (date.getMonth() + 1)).slice(-2);

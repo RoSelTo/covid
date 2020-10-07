@@ -7,6 +7,7 @@
           <option value="hosp">Hospitalisations</option>
           <option value="rea">Réanimations</option>
           <option value="dc">Décès</option>
+          <option value="pos">Incidence</option>
           <!-- <option value="rad">Retours à domicile</option> -->
         </select>
         <label for="date" style="margin-left:20px;margin-right:10px">Date</label>
@@ -29,9 +30,12 @@
 <script>
 import * as d3 from 'd3'
 import { Promise } from 'q';
-import moment from 'moment'
+import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 import Map from './components/map.vue'
 import Chart from './components/chart.vue'
+
+dayjs.extend(customParseFormat)
 
 export default {
   name: 'App',
@@ -76,6 +80,7 @@ export default {
     promises.push(d3.dsv(";", "https://www.data.gouv.fr/fr/datasets/r/63352e38-d353-4b54-bfd1-f1b3ee1cabd7"));
     promises.push(d3.dsv(";", "https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"));
     promises.push(d3.dsv(";", "/" + depPath));
+    promises.push(d3.dsv(";", "https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675"));
     Promise.all(promises).then(function(values) {
       var departementsData = values[2];
       departementsData.forEach(function(dep) {
@@ -86,66 +91,94 @@ export default {
         };
       })
 
-        var covidData = values[0];
-        // covid data
-        covidData.forEach(function(element) {
-          if(element.sexe == "0") {
-            var dateFormatted = element.jour.indexOf("-") > -1 ? moment(element.jour, "YYYY-MM-DD").format("DD/MM/YYYY") : element.jour;
-            if(that.depArray[element.dep] == undefined)
-              that.depArray[element.dep] = {};
-            var popRatio = that.depPop[element.dep] != null ? that.depPop[element.dep].pop/100000 : 0;
-            that.depArray[element.dep][dateFormatted] = {
-                "hosp": parseInt(element.hosp),
-                "hospRatio": parseInt(element.hosp)/popRatio,
-                "rea": parseInt(element.rea),
-                "reaRatio": parseInt(element.rea)/popRatio,
-                "dc": parseInt(element.dc),
-                "dcRatio": parseInt(element.dc)/popRatio,
-                "rad": parseInt(element.rad),
-                "incid_hosp": 0,
-                "incid_rea": 0,
-                "incid_dc": 0,
-                "incid_rad": 0
+      var covidData = values[0]; // covid data
+      covidData.forEach(function(element) {
+        if(element.sexe == "0") {
+          var dateFormatted = element.jour.indexOf("-") > -1 ? element.jour : dayjs(element.jour, "DD/MM/YYYY").format("YYYY-MM-DD");
+          if(that.depArray[element.dep] == undefined)
+            that.depArray[element.dep] = {};
+          var popRatio = that.depPop[element.dep] != null ? that.depPop[element.dep].pop/100000 : 0;
+          that.depArray[element.dep][dateFormatted] = {
+              "hosp": parseInt(element.hosp),
+              "hospRatio": parseInt(element.hosp)/popRatio,
+              "rea": parseInt(element.rea),
+              "reaRatio": parseInt(element.rea)/popRatio,
+              "dc": parseInt(element.dc),
+              "dcRatio": parseInt(element.dc)/popRatio,
+              "rad": parseInt(element.rad),
+              "incid_hosp": 0,
+              "incid_rea": 0,
+              "incid_dc": 0,
+              "incid_rad": 0,
+              "pos": 0,
+              "posRatio": 0,
+              "tests": 0
+          };
+          if(that.totalArray[dateFormatted] == undefined) {
+            that.dayList.push(dateFormatted);
+            that.totalArray[dateFormatted] = {
+              "hosp": parseInt(element.hosp),
+              "rea": parseInt(element.rea),
+              "dc": parseInt(element.dc),
+              "rad": parseInt(element.rad),
+              "incid_hosp": 0,
+              "incid_rea": 0,
+              "incid_dc": 0,
+              "incid_rad": 0,
+              "pos": 0,
+              "posRatio": 0,
+              "tests": 0
             };
-            if(that.totalArray[dateFormatted] == undefined) {
-              that.dayList.push(dateFormatted);
-              that.totalArray[dateFormatted] = {
-                "hosp": parseInt(element.hosp),
-                "rea": parseInt(element.rea),
-                "dc": parseInt(element.dc),
-                "rad": parseInt(element.rad),
-                "incid_hosp": 0,
-                "incid_rea": 0,
-                "incid_dc": 0,
-                "incid_rad": 0
-              };
-            } else {
-              that.totalArray[dateFormatted].hosp += parseInt(element.hosp);
-              that.totalArray[dateFormatted].rea += parseInt(element.rea);
-              that.totalArray[dateFormatted].dc += parseInt(element.dc);
-              that.totalArray[dateFormatted].rad += parseInt(element.rad);
+          } else {
+            that.totalArray[dateFormatted].hosp += parseInt(element.hosp);
+            that.totalArray[dateFormatted].rea += parseInt(element.rea);
+            that.totalArray[dateFormatted].dc += parseInt(element.dc);
+            that.totalArray[dateFormatted].rad += parseInt(element.rad);
+          }
+        }
+      });
+
+      var covidDataIncid = values[1]; // covid data incid
+      covidDataIncid.forEach(function(element) {
+        var dateFormatted = element.jour.indexOf("-") > -1 ? element.jour : dayjs(element.jour, "DD/MM/YYYY").format("YYYY-MM-DD");
+        if(that.depArray[element.dep][dateFormatted] != undefined) {
+          that.depArray[element.dep][dateFormatted].incid_hosp = parseInt(element.incid_hosp);
+          that.depArray[element.dep][dateFormatted].incid_rea = parseInt(element.incid_rea);
+          that.depArray[element.dep][dateFormatted].incid_dc = parseInt(element.incid_dc);
+          that.depArray[element.dep][dateFormatted].incid_rad = parseInt(element.incid_rad);
+        }
+
+        if(that.totalArray[dateFormatted] != undefined) {
+          that.totalArray[dateFormatted].incid_hosp += parseInt(element.incid_hosp);
+          that.totalArray[dateFormatted].incid_rea += parseInt(element.incid_rea);
+          that.totalArray[dateFormatted].incid_dc += parseInt(element.incid_dc);
+          that.totalArray[dateFormatted].incid_rad += parseInt(element.incid_rad);
+        }
+      });
+
+      var testData = values[3]; // test data
+      var incidence = [];
+      var dep = "";
+      testData.forEach(function(element) {
+        if(element.cl_age90 == "0") {
+          if(dep != element.dep) {
+            dep = element.dep;
+            incidence = [];
+          }
+          incidence.push(parseInt(element.P));
+          var dateFormatted = element.jour.indexOf("-") > -1 ? element.jour : dayjs(element.jour, "DD/MM/YYYY").format("YYYY-MM-DD");
+          var popRatio = that.depPop[element.dep] != null ? that.depPop[element.dep].pop/100000 : 0;
+          if(that.depArray[element.dep] != undefined && that.depArray[element.dep][dateFormatted] != undefined) {
+            that.depArray[element.dep][dateFormatted].pos = parseInt(element.P);
+            that.depArray[element.dep][dateFormatted].tests = parseInt(element.T);
+            if(incidence.length == 7 && popRatio != 0) {
+              that.depArray[element.dep][dateFormatted].posRatio = incidence.reduce(function(a,b){return a+b;}, 0) / popRatio;
+              incidence.shift();
             }
           }
-        });
+        }
+      });
 
-        var covidDataIncid = values[1];
-        // covid data incid
-        covidDataIncid.forEach(function(element) {
-          var dateFormatted = element.jour.indexOf("-") > -1 ? moment(element.jour, "YYYY-MM-DD").format("DD/MM/YYYY") : element.jour;
-          if(that.depArray[element.dep][dateFormatted] != undefined) {
-            that.depArray[element.dep][dateFormatted].incid_hosp += parseInt(element.incid_hosp);
-            that.depArray[element.dep][dateFormatted].incid_rea += parseInt(element.incid_rea);
-            that.depArray[element.dep][dateFormatted].incid_dc += parseInt(element.incid_dc);
-            that.depArray[element.dep][dateFormatted].incid_rad += parseInt(element.incid_rad);
-          }
-
-          if(that.totalArray[dateFormatted] != undefined) {
-            that.totalArray[dateFormatted].incid_hosp += parseInt(element.incid_hosp);
-            that.totalArray[dateFormatted].incid_rea += parseInt(element.incid_rea);
-            that.totalArray[dateFormatted].incid_dc += parseInt(element.incid_dc);
-            that.totalArray[dateFormatted].incid_rad += parseInt(element.incid_rad);
-          }
-        });
       that.dayList = that.dayList.reverse();
       that.date = that.dayList[0];
       
