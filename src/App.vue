@@ -12,7 +12,8 @@
         </select>
         <label for="date" style="margin-left:20px;margin-right:10px">Date</label>
         <select class="form-control col-md-3" name="date" v-model="date"  style="display:inline-block">
-          <option v-for="day in dayList" v-bind:key="day" v-bind:value="day">{{ day }}</option>
+          <option v-show="dataType != 'pos'" v-for="day in dayList" v-bind:key="day" v-bind:value="day">{{ day }}</option>
+          <option v-show="dataType == 'pos'" v-for="day in incidenceDayList" v-bind:key="day" v-bind:value="day">{{ day }}</option>
         </select>
         <button class="btn btn-primary" v-on:click="startAnimation" style="margin-left:10px"><font-awesome-icon icon="play" style="margin-right:5px" />Animation</button>
       </div>
@@ -48,6 +49,7 @@ export default {
       depArray: {},
       totalArray: {},
       dayList: [],
+      incidenceDayList: [],
       depPop: {},
       date: "",
       dataType: "hosp",
@@ -58,7 +60,7 @@ export default {
   methods: {
     startAnimation: function(){
       var that = this;
-      var copyDayList = $.extend([], that.dayList);
+      var copyDayList = that.dataType != "pos" ? $.extend([], that.dayList) : $.extend([], that.incidenceDayList);
       copyDayList = copyDayList.reverse();
       copyDayList.forEach(function(day, index){
         setTimeout(function(){
@@ -73,6 +75,14 @@ export default {
       }
     }
   },
+  watch: {
+    dataType: function(){
+      if(this.dataType == "pos") {
+        if(this.incidenceDayList.indexOf(this.date) == -1)
+          this.date = this.incidenceDayList[0];
+      }
+    }
+  },
   mounted: function(){
     var that = this;
     var promises = [];
@@ -81,6 +91,7 @@ export default {
     promises.push(d3.dsv(";", "https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"));
     promises.push(d3.dsv(";", "/" + depPath));
     promises.push(d3.dsv(";", "https://www.data.gouv.fr/fr/datasets/r/406c6a23-e283-4300-9484-54e78c8ae675"));
+    promises.push(d3.dsv(";", "https://www.data.gouv.fr/fr/datasets/r/dd0de5d9-b5a5-4503-930a-7b08dc0adc7c"));
     Promise.all(promises).then(function(values) {
       var departementsData = values[2];
       departementsData.forEach(function(dep) {
@@ -179,6 +190,26 @@ export default {
         }
       });
 
+      var testNationalData = values[4]; // test national data
+      incidence = [];
+      testNationalData.forEach(function(element) {
+        if(element.cl_age90 == "0") {
+          var dateFormatted = element.jour.indexOf("-") > -1 ? element.jour : dayjs(element.jour, "DD/MM/YYYY").format("YYYY-MM-DD");
+          that.incidenceDayList.push(dateFormatted);
+          incidence.push(parseInt(element.P));
+          var popRatio = 66774482/100000;
+          if(that.totalArray != undefined && that.totalArray[dateFormatted] != undefined) {
+            that.totalArray[dateFormatted].pos = parseInt(element.P);
+            that.totalArray[dateFormatted].tests = parseInt(element.T);
+            if(incidence.length == 7) {
+              that.totalArray[dateFormatted].posRatio = incidence.reduce(function(a,b){return a+b;}, 0) / popRatio;
+              incidence.shift();
+            }
+          }
+        }
+      });
+
+      that.incidenceDayList = that.incidenceDayList.reverse();
       that.dayList = that.dayList.reverse();
       that.date = that.dayList[0];
       

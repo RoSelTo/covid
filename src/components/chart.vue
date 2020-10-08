@@ -72,24 +72,27 @@ export default {
             };
       }
     },
+    untilToday: function(){
+      return this.dataType != "pos";
+    },
     filteredDates: function(){
       var that = this;
       if(this.period == "all") {
         return {
           startDate: dayjs().add(-1, "years"),
-          endDate: dayjs()
+          endDate: this.untilToday ? dayjs() : dayjs().add(-3, "days")
         }
       }
       if(this.period == "trailingMonth") {
         return {
           startDate: dayjs().add(-1, "months"),
-          endDate: dayjs()
+          endDate: this.untilToday ? dayjs() : dayjs().add(-3, "days")
         }
       }
       if(this.period == "currentQuarter") {
         return {
           startDate: dayjs().startOf("month").add(-2, "months"),
-          endDate: dayjs()
+          endDate: this.untilToday ? dayjs() : dayjs().add(-3, "days")
         }
       }
     },
@@ -120,8 +123,10 @@ export default {
           if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
             result.push({
               date: parsedDate,
-              value: that.totalArray[date][that.dataType],
-              valueSec: that.totalArray[date]["incid_" + that.dataType]
+              value: that.dataType == "pos" ? Math.round(that.totalArray[date][that.dataType + "Ratio"] * 100)/100
+              : that.totalArray[date][that.dataType],
+              valueSec: that.dataType == "pos" ? that.totalArray[date][that.dataType] 
+              : that.totalArray[date]["incid_" + that.dataType]
             });
           }
         });
@@ -180,28 +185,30 @@ export default {
           .x(function(d) { return x(d.date) })
           .y(function(d) { return y0(d.value) })
           )
-      svg.append("path")
-        .datum(data)
-        .attr("fill", "none")
-        .attr("stroke", "red")
-        .attr("stroke-width", 1.5)
-        .attr("d", d3.line()
-          .x(function(d) { return x(d.date) })
-          .y(function(d) { return y1(d.valueSec) })
-          )
-      
-      var movingAverage = that.movingAvg(data, 7);
-      
-      svg.append("path")
-        .datum(movingAverage)
-        .attr("fill", "none")
-        .attr("stroke", "red")
-        .attr("stroke-dasharray", ("3, 3"))
-        .attr("stroke-width", 1.5)
-        .attr("d", d3.line()
-          .x(function(d) { return x(d.date) })
-          .y(function(d) { return y1(d.movingAverage) })
-          )
+
+      if(that.untilToday) {
+        svg.append("path")
+          .datum(data)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-width", 1.5)
+          .attr("d", d3.line()
+            .x(function(d) { return x(d.date) })
+            .y(function(d) { return y1(d.valueSec) })
+            )
+        
+        var movingAverage = that.movingAvg(data, 7);
+        svg.append("path")
+          .datum(movingAverage)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-dasharray", ("3, 3"))
+          .attr("stroke-width", 1.5)
+          .attr("d", d3.line()
+            .x(function(d) { return x(d.date) })
+            .y(function(d) { return y1(d.movingAverage) })
+            )
+      }
 
       var tooltip = d3.select("#tooltip");
 
@@ -224,15 +231,17 @@ export default {
         .style("stroke-width", lineStroke)
         .style("opacity", "0");
 
-      var mousePerLine1 = mouseG.append("g")
-        .attr("class", "mouse-per-line");
+      if(that.untilToday) {
+        var mousePerLine1 = mouseG.append("g")
+          .attr("class", "mouse-per-line");
 
-      mousePerLine1.append("circle")
-        .attr("r", 4)
-        .style("stroke", "red")
-        .style("fill", "none")
-        .style("stroke-width", lineStroke)
-        .style("opacity", "0");
+        mousePerLine1.append("circle")
+          .attr("r", 4)
+          .style("stroke", "red")
+          .style("fill", "none")
+          .style("stroke-width", lineStroke)
+          .style("opacity", "0");
+      }
 
       mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
         .attr('width', width) 
@@ -276,7 +285,7 @@ export default {
           
           var evolValue = Math.round((data[idx].value - data[idx - 1].value) * 100) / 100;
           var evol = idx > 0 ? evolValue > 0 ? " (+" + evolValue + " par rapport à la veille)" : " (" + evolValue + " par rapport à la veille)" : "";
-          var evolValueIncid = Math.round((data[idx].valueSec - data[idx - 1].valueSec) * 100) / 100;
+          var evolValueIncid = idx > 6 ? Math.round((data[idx].valueSec - data[idx - 7].valueSec) * 100) / 100 : 0;
           var evolIncid = idx > 6 ? evolValueIncid > 0 ? " (+" + evolValueIncid + " sur 7 jours)" : " (" + evolValueIncid + " sur 7 jours)" : "";
           var left = mouse[0] + 370 > width ? mouse[0] - 320 : mouse[0] + 100;
           tooltip
@@ -296,9 +305,11 @@ export default {
 
       // Add legend
       svg.append("circle").attr("cx",width - 190).attr("cy",50).attr("r", 6).style("fill", "steelblue")
-      svg.append("circle").attr("cx",width - 190).attr("cy",70).attr("r", 6).style("fill", "red")
       svg.append("text").attr("x", width - 180).attr("y", 50).text(this.labelTooltip.y0).style("font-size", "15px").attr("alignment-baseline","middle")
-      svg.append("text").attr("x", width - 180).attr("y", 70).text(this.labelTooltip.y1).style("font-size", "15px").attr("alignment-baseline","middle")
+      if(that.untilToday) {
+        svg.append("circle").attr("cx",width - 190).attr("cy",70).attr("r", 6).style("fill", "red")
+        svg.append("text").attr("x", width - 180).attr("y", 70).text(this.labelTooltip.y1).style("font-size", "15px").attr("alignment-baseline","middle")
+      }
     },
     create: function(){
       this.updateChart(this.totalData);

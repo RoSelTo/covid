@@ -23,7 +23,7 @@ Vue.mixin({
       var avg = function(array){
           var sum = 0, count = 0, val;
           for (var i in array){
-            sum += array[i].valueIncid;
+            sum += array[i].valueSec;
             count++;
           }
           return sum / count;
