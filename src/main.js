@@ -48,6 +48,13 @@ Vue.mixin({
   },
 })
 
+Vue.filter('titleCase', function (value) {
+  if(value.indexOf("-") > -1) // with tiret
+    return value.split('-').map(function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}).join('-');
+  else // with space
+    return value.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+})
+
 new Vue({
   render: function (h) { return h(App) },
 }).$mount('#app')

@@ -3,10 +3,10 @@
     <div class="row">
       <div class="col-7">
         <h3 v-if="selectedDep != null">
-          Données : {{selectedDep.name}}
+          {{selectedDep.name | titleCase}}
         </h3>
         <h3 v-else>
-          Données : France
+          France
         </h3>
       </div>
       <div class="col-5">
@@ -70,6 +70,30 @@ export default {
             y0:"Incidence",
             y1: "Cas positifs"
             };
+        case "posRate":
+          return {
+            y0:"Taux de positivité",
+            y1: "Tests"
+            };
+      }
+    },
+    axisVariables: function(){
+      switch(this.dataType){
+        case "pos":
+          return {
+            y0:"posRatio",
+            y1: "pos"
+            };
+        case "posRate":
+          return {
+            y0:"posRate",
+            y1: "tests"
+            };
+        default:
+        return {
+          y0: this.dataType,
+          y1: "incid_" + this.dataType
+        }
       }
     },
     untilToday: function(){
@@ -105,10 +129,8 @@ export default {
           if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
             result.push({
               date: parsedDate,
-              value: that.dataType == "pos" ? Math.round(that.depArray[that.selectedDep.id][date][that.dataType + "Ratio"] * 100)/100 
-              : that.depArray[that.selectedDep.id][date][that.dataType],
-              valueSec: that.dataType == "pos" ? that.depArray[that.selectedDep.id][date][that.dataType] 
-              : that.depArray[that.selectedDep.id][date]["incid_" + that.dataType] 
+              value: that.depArray[that.selectedDep.id][date][that.axisVariables.y0],
+              valueSec: that.depArray[that.selectedDep.id][date][that.axisVariables.y1]
             });
           }
         });
@@ -123,10 +145,8 @@ export default {
           if(parsedDate > that.filteredDates.startDate && parsedDate <= that.filteredDates.endDate) {
             result.push({
               date: parsedDate,
-              value: that.dataType == "pos" ? Math.round(that.totalArray[date][that.dataType + "Ratio"] * 100)/100
-              : that.totalArray[date][that.dataType],
-              valueSec: that.dataType == "pos" ? that.totalArray[date][that.dataType] 
-              : that.totalArray[date]["incid_" + that.dataType]
+              value: that.totalArray[date][that.axisVariables.y0],
+              valueSec: that.totalArray[date][that.axisVariables.y1]
             });
           }
         });

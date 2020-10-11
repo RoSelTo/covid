@@ -31,6 +31,8 @@ export default {
           return "Retours à domicile";
         case "pos":
           return "Incidence";
+        case "posRate":
+          return "Taux de positivité";
       }
     }
   },
@@ -82,6 +84,9 @@ export default {
         case "pos":
           domainScale =  [10,50,100,150,250];
           break;
+        case "posRate":
+          domainScale =  [1,2,5,10,15];
+          break;
       }
       var colorScale = d3.scaleThreshold()
             .domain(domainScale)
@@ -90,18 +95,30 @@ export default {
       d3.select('#map')
         .selectAll("path")
         .attr("fill", function(d){
-            return colorScale(that.depArray[d.properties.CODE_DEPT][that.date][that.dataType + "Ratio"]);
+            if(that.dataType == "posRate")
+              return colorScale(that.depArray[d.properties.CODE_DEPT][that.date][that.dataType]);
+            else
+              return colorScale(that.depArray[d.properties.CODE_DEPT][that.date][that.dataType + "Ratio"]);
           })
         .on("mouseover", function(e) {
           var pos = d3.select(this).node().getBoundingClientRect();
-          var ratio = Math.round(that.depArray[e.properties.CODE_DEPT][that.date][that.dataType + "Ratio"] * 100)/100;
+          var ratio = that.dataType == "posRate" ? that.depArray[e.properties.CODE_DEPT][that.date][that.dataType] :
+                       Math.round(that.depArray[e.properties.CODE_DEPT][that.date][that.dataType + "Ratio"] * 100)/100;
           tooltip.transition()        
               .duration(200)      
               .style("opacity", .9);
-          tooltip.html( "<b>Département : </b>" + e.properties.NOM_DEPT + "<br>"
-                  + "<b>"+ that.labelTooltip + " : </b>" + that.depArray[e.properties.CODE_DEPT][that.date][that.dataType] + " (" +  ratio + "/100000 habitants)<br>")
-              .style("left", pos.x + 50 + "px")     
-              .style("top", (pos.y - 100) + "px");
+
+          if(that.dataType == "posRate") {
+            tooltip.html( "<b>Département : </b>" + that.$options.filters.titleCase(e.properties.NOM_DEPT) + "<br>"
+                    + "<b>"+ that.labelTooltip + " : </b>" + that.depArray[e.properties.CODE_DEPT][that.date][that.dataType] + " %<br>")
+                .style("left", pos.x + 50 + "px")     
+                .style("top", (pos.y - 100) + "px");
+          } else {
+            tooltip.html( "<b>Département : </b>" + that.$options.filters.titleCase(e.properties.NOM_DEPT) + "<br>"
+                    + "<b>"+ that.labelTooltip + " : </b>" + that.depArray[e.properties.CODE_DEPT][that.date][that.dataType] + " (" +  ratio + "/100000 habitants)<br>")
+                .style("left", pos.x + 50 + "px")     
+                .style("top", (pos.y - 100) + "px");
+          }
         })
         .on("mouseout", function(d) {
                 tooltip.style("opacity", 0);

@@ -8,6 +8,7 @@
           <option value="rea">Réanimations</option>
           <option value="dc">Décès</option>
           <option value="pos">Incidence</option>
+          <option value="posRate">Taux de positivité</option>
           <!-- <option value="rad">Retours à domicile</option> -->
         </select>
         <label for="date" style="margin-left:20px;margin-right:10px">Date</label>
@@ -21,7 +22,7 @@
         <button class="btn btn-primary" v-if="selectedDep != null" v-on:click="selectedDep = null"><font-awesome-icon icon="home" style="margin-right:5px" />Retour vers France</button>
       </div>
     </div>
-    <div class="row">
+    <div class="row" style="margin-top:10px">
       <Map ref="map" :dep-array="depArray" :total-array="totalArray" :day-list="dayList" :date="date" :data-type="dataType" v-on:select-dep="selectDep"/>
       <Chart ref="chart" :dep-array="depArray" :total-array="totalArray" :data-type="dataType" :selected-dep="selectedDep"/>
     </div>
@@ -77,7 +78,7 @@ export default {
   },
   watch: {
     dataType: function(){
-      if(this.dataType == "pos") {
+      if(this.dataType == "pos" || this.dataType == "posRate") {
         if(this.incidenceDayList.indexOf(this.date) == -1)
           this.date = this.incidenceDayList[0];
       }
@@ -123,6 +124,7 @@ export default {
               "incid_rad": 0,
               "pos": 0,
               "posRatio": 0,
+              "posRate": 0,
               "tests": 0
           };
           if(that.totalArray[dateFormatted] == undefined) {
@@ -138,6 +140,7 @@ export default {
               "incid_rad": 0,
               "pos": 0,
               "posRatio": 0,
+              "posRate": 0,
               "tests": 0
             };
           } else {
@@ -182,8 +185,9 @@ export default {
           if(that.depArray[element.dep] != undefined && that.depArray[element.dep][dateFormatted] != undefined) {
             that.depArray[element.dep][dateFormatted].pos = parseInt(element.P);
             that.depArray[element.dep][dateFormatted].tests = parseInt(element.T);
+            that.depArray[element.dep][dateFormatted].posRate = Math.round((parseInt(element.P) / parseInt(element.T))*10000)/100;
             if(incidence.length == 7 && popRatio != 0) {
-              that.depArray[element.dep][dateFormatted].posRatio = incidence.reduce(function(a,b){return a+b;}, 0) / popRatio;
+              that.depArray[element.dep][dateFormatted].posRatio =  Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / popRatio) * 100)/100;
               incidence.shift();
             }
           }
@@ -195,14 +199,17 @@ export default {
       testNationalData.forEach(function(element) {
         if(element.cl_age90 == "0") {
           var dateFormatted = element.jour.indexOf("-") > -1 ? element.jour : dayjs(element.jour, "DD/MM/YYYY").format("YYYY-MM-DD");
-          that.incidenceDayList.push(dateFormatted);
+          if(that.incidenceDayList.indexOf(dateFormatted) == -1) {
+            that.incidenceDayList.push(dateFormatted);
+          }
           incidence.push(parseInt(element.P));
           var popRatio = 66774482/100000;
           if(that.totalArray != undefined && that.totalArray[dateFormatted] != undefined) {
             that.totalArray[dateFormatted].pos = parseInt(element.P);
             that.totalArray[dateFormatted].tests = parseInt(element.T);
+            that.totalArray[dateFormatted].posRate = Math.round((parseInt(element.P) / parseInt(element.T))*10000)/100;
             if(incidence.length == 7) {
-              that.totalArray[dateFormatted].posRatio = incidence.reduce(function(a,b){return a+b;}, 0) / popRatio;
+              that.totalArray[dateFormatted].posRatio = Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / popRatio) *100)/100
               incidence.shift();
             }
           }
