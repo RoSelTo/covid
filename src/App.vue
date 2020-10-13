@@ -1,6 +1,14 @@
 <template>
   <div id="app">
-    <div class="row">
+    <div class="row" style="margin-right:0px;margin-left:0px">
+      <Card v-if="date != ''" title="Cas confirmés" :data="totalArray" field="pos" :date="date"/>
+      <Card v-if="date != ''" title="Réanimations" :data="totalArray" field="rea" :date="date"/>
+      <Card v-if="date != ''" title="Hospitalisations" :data="totalArray" field="hosp" :date="date"/>
+      <Card v-if="date != ''" title="Retour à domicile" :data="totalArray" field="rad" :date="date"/>
+      <Card v-if="date != ''" title="Décès" :data="totalArray" field="dc" :date="date"/>
+      <Card v-if="date != ''" title="Taux de positivité" :data="totalArray" field="posRate" :date="date"/>
+    </div>
+    <div class="row" style="margin-top:20px">
       <div class="col-md-6">
         <label for="dataType" style="margin-right:10px">Type</label>
         <select class="form-control col-md-3" name="dataType" v-model="dataType" style="display:inline-block">
@@ -36,6 +44,7 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import Map from './components/map.vue'
 import Chart from './components/chart.vue'
+import Card from './components/card.vue'
 
 dayjs.extend(customParseFormat)
 
@@ -43,7 +52,8 @@ export default {
   name: 'App',
   components: {
     Map,
-    Chart
+    Chart,
+    Card
   },
   data: function(){
     return {
@@ -237,6 +247,7 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   /* color: #2c3e50; */
-  margin-top: 60px;
+  margin-top: 20px;
+  overflow-x: hidden;
 }
 </style>

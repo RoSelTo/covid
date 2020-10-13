@@ -112,12 +112,12 @@ export default {
             tooltip.html( "<b>Département : </b>" + that.$options.filters.titleCase(e.properties.NOM_DEPT) + "<br>"
                     + "<b>"+ that.labelTooltip + " : </b>" + that.depArray[e.properties.CODE_DEPT][that.date][that.dataType] + " %<br>")
                 .style("left", pos.x + 50 + "px")     
-                .style("top", (pos.y - 100) + "px");
+                .style("top", (pos.y - 200) + "px");
           } else {
             tooltip.html( "<b>Département : </b>" + that.$options.filters.titleCase(e.properties.NOM_DEPT) + "<br>"
                     + "<b>"+ that.labelTooltip + " : </b>" + that.depArray[e.properties.CODE_DEPT][that.date][that.dataType] + " (" +  ratio + "/100000 habitants)<br>")
                 .style("left", pos.x + 50 + "px")     
-                .style("top", (pos.y - 100) + "px");
+                .style("top", (pos.y - 200) + "px");
           }
         })
         .on("mouseout", function(d) {
