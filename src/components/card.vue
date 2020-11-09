@@ -43,6 +43,7 @@ export default {
 
     .card-body {
         border: 1px solid rgba(0,0,0,.125);
+        padding: 1rem;
     }
 
     .card-subtitle {

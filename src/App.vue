@@ -31,7 +31,7 @@
       </div>
     </div>
     <div class="row" style="margin-top:10px">
-      <Map ref="map" :dep-array="depArray" :total-array="totalArray" :day-list="dayList" :date="date" :data-type="dataType" v-on:select-dep="selectDep"/>
+      <Map ref="map" :dep-array="depArray" :total-array="totalArray" :depList="Object.keys(depPop)" :day-list="dayList" :date="date" :data-type="dataType" v-on:select-dep="selectDep"/>
       <Chart ref="chart" :dep-array="depArray" :total-array="totalArray" :data-type="dataType" :selected-dep="selectedDep"/>
     </div>
   </div>
@@ -200,6 +200,8 @@ export default {
               that.depArray[element.dep][dateFormatted].posRatio =  Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / popRatio) * 100)/100;
               incidence.shift();
             }
+          } else {
+            incidence.shift();
           }
         }
       });
@@ -219,13 +221,14 @@ export default {
             that.totalArray[dateFormatted].tests = parseInt(element.T);
             that.totalArray[dateFormatted].posRate = Math.round((parseInt(element.P) / parseInt(element.T))*10000)/100;
             if(incidence.length == 7) {
-              that.totalArray[dateFormatted].posRatio = Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / popRatio) *100)/100
+              that.totalArray[dateFormatted].posRatio = Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / popRatio) *100)/100;
               incidence.shift();
             }
+          } else {
+            incidence.shift();
           }
         }
       });
-
       that.incidenceDayList = that.incidenceDayList.reverse();
       that.dayList = that.dayList.reverse();
       that.date = that.dayList[0];

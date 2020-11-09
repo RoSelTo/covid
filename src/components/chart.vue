@@ -18,7 +18,7 @@
         </select>
       </div>
     </div>
-    <div style="height:calc(100% - 50px)">
+    <div style="height:calc(100% - 70px)">
       <svg id="chart" style="height:100%;width:100%"></svg>
       <div id="tooltip"></div>
     </div>

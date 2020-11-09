@@ -1,7 +1,35 @@
 <template>
   <div class="col-6">
-    <svg id="map"></svg>
-    <div class="tooltip">
+    <ul class="nav nav-pills">
+        <li class="nav-item">
+          <a class="nav-link" :class="{'active': isMap}" href="#" v-on:click="isMap = true">Carte</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" :class="{'active': !isMap}"  href="#" v-on:click="isMap = false">Tableau</a>
+        </li>
+    </ul>
+    <div v-show="isMap">
+      <svg id="map"></svg>
+      <div class="tooltip">
+      </div>
+    </div>
+    <div v-show="!isMap" id="tableContainer">
+      <table class="table">
+        <thead>
+          <th>Département</th>
+          <th>{{labelTooltip}}</th>
+        </thead>
+        <tbody>
+          <tr v-for="dep in depList">
+            <td>
+              {{dep}}
+            </td>
+            <td v-if="depArray[dep] != undefined">
+              {{depArray[dep][date][dataType]}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -12,11 +40,17 @@ import { Promise } from 'q';
 export default {
   name: 'Map',
   props: {
+    depList: Array,
     depArray: Object,
     totalArray: Object,
     dayList: Array,
     date: String,
     dataType: String
+  },
+  data: function(){
+    return {
+      isMap: true
+    }
   },
   computed:{
     labelTooltip: function(){
@@ -73,7 +107,7 @@ export default {
           domainScale = [10,20,30,40,50];
           break;
         case "rea": 
-          domainScale =  [2,5,10,20,50];
+          domainScale =  [2,5,8,12,20];
           break;
         case "dc":
           domainScale =  [10,50,100,200,500];
@@ -82,10 +116,10 @@ export default {
           domainScale =  [100,200,500,1000,2000];
           break;
         case "pos":
-          domainScale =  [10,50,100,150,250];
+          domainScale =  [10,50,100,250,500];
           break;
         case "posRate":
-          domainScale =  [1,2,5,10,15];
+          domainScale =  [2,5,10,15,20];
           break;
       }
       var colorScale = d3.scaleThreshold()
@@ -158,21 +192,23 @@ li {
   display: inline-block;
   margin: 0 10px;
 }
-a {
-  color: #42b983;
-}
 
 div.tooltip {
-    position: absolute;
-    text-align: left;
-    color: black;
-    padding: 12px;
-    font: 14px sans-serif;
-    background: white;
-    border: 0px;
-    pointer-events: none;
-    opacity: 0;
-    box-shadow: 0 1px 3px 0 #d4d4d5, 0 0 0 1px #d4d4d5;
-    line-height: 20px;
+  position: absolute;
+  text-align: left;
+  color: black;
+  padding: 12px;
+  font: 14px sans-serif;
+  background: white;
+  border: 0px;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 1px 3px 0 #d4d4d5, 0 0 0 1px #d4d4d5;
+  line-height: 20px;
+}
+
+#tableContainer {
+  height:600px;
+  overflow: auto;
 }
 </style>
