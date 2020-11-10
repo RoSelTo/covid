@@ -16,16 +16,20 @@
     <div v-show="!isMap" id="tableContainer">
       <table class="table">
         <thead>
-          <th>Département</th>
-          <th>{{labelTooltip}}</th>
+          <th v-on:click="sortedBy = 'id'">Département</th>
+          <th v-on:click="sortedBy = 'data'">{{labelTable.y0}}</th>
+          <th v-on:click="sortedBy = 'dataAlt'">{{labelTable.y1}}</th>
         </thead>
         <tbody>
-          <tr v-for="dep in depList">
+          <tr v-for="dep in sortedDepData" :key="dep.id">
             <td>
-              {{dep}}
+              {{dep.dep}}
             </td>
-            <td v-if="depArray[dep] != undefined">
-              {{depArray[dep][date][dataType]}}
+            <td>
+              {{dep.data}}
+            </td>
+            <td>
+              {{dep.dataAlt}}
             </td>
           </tr>
         </tbody>
@@ -40,7 +44,7 @@ import { Promise } from 'q';
 export default {
   name: 'Map',
   props: {
-    depList: Array,
+    depRef: Object,
     depArray: Object,
     totalArray: Object,
     dayList: Array,
@@ -49,7 +53,8 @@ export default {
   },
   data: function(){
     return {
-      isMap: true
+      isMap: true,
+      sortedBy: "id"
     }
   },
   computed:{
@@ -68,6 +73,53 @@ export default {
         case "posRate":
           return "Taux de positivité";
       }
+    },
+    labelTable: function(){
+      switch(this.dataType){
+        case "hosp":
+          return {
+            y0:"Hospitalisations",
+            y1: "Nouvelles hospitalisations"
+            };
+        case "rea": 
+          return {
+            y0:"Réanimations",
+            y1: "Nouvelles réanimations"
+            };
+        case "dc":
+          return {
+            y0:"Décès",
+            y1: "Nouveaux décès"
+            };
+        case "pos":
+          return {
+            y0:"Incidence",
+            y1: "Cas positifs"
+            };
+        case "posRate":
+          return {
+            y0:"Taux de positivité",
+            y1: "Tests"
+            };
+      }
+    },
+    sortedDepData: function(){
+      var that = this;
+      var result = [];
+      var dataTag = that.dataType == "pos" ? "posRatio" : that.dataType;
+      var dataTagAlt = that.dataType == "pos" ? that.dataType : that.dataType == "posRate" ? "tests" : 'incid_' + that.dataType;
+      that.depRef.forEach(function(dep){
+        result.push({
+          id: dep.id,
+          dep: dep.dep,
+          data: that.depArray[dep.id][that.date][dataTag],
+          dataAlt: that.depArray[dep.id][that.date][dataTagAlt]
+        });
+      });
+      if(that.sortedBy == "id")
+        return result.sort(function(a, b){return a.id.localeCompare(b.id)});
+      else
+        return result.sort(function(a, b){return b[that.sortedBy] - a[that.sortedBy]});
     }
   },
   methods: {

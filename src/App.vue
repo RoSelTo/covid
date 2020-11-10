@@ -31,7 +31,7 @@
       </div>
     </div>
     <div class="row" style="margin-top:10px">
-      <Map ref="map" :dep-array="depArray" :total-array="totalArray" :depList="Object.keys(depPop)" :day-list="dayList" :date="date" :data-type="dataType" v-on:select-dep="selectDep"/>
+      <Map ref="map" :dep-array="depArray" :total-array="totalArray" :dep-ref="depRef" :day-list="dayList" :date="date" :data-type="dataType" v-on:select-dep="selectDep"/>
       <Chart ref="chart" :dep-array="depArray" :total-array="totalArray" :data-type="dataType" :selected-dep="selectedDep"/>
     </div>
   </div>
@@ -58,6 +58,7 @@ export default {
   data: function(){
     return {
       depArray: {},
+      depRef: [],
       totalArray: {},
       dayList: [],
       incidenceDayList: [],
@@ -111,6 +112,10 @@ export default {
           "dep": dep.DEP,
           "pop": parseInt(dep.PMUN)
         };
+        that.depRef.push({
+          "id": dep.CODDEP,
+          "dep": dep.DEP
+        });
       })
 
       var covidData = values[0]; // covid data
