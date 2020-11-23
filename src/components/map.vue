@@ -44,7 +44,7 @@ import { Promise } from 'q';
 export default {
   name: 'Map',
   props: {
-    depRef: Object,
+    depRef: Array,
     depArray: Object,
     totalArray: Object,
     dayList: Array,
