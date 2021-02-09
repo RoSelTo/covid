@@ -19,7 +19,7 @@
           <th v-on:click="sortedBy = 'id'">Département</th>
           <th v-on:click="sortedBy = 'data'">{{labelTable.y0}}</th>
           <th v-on:click="sortedBy = 'dataAlt'">{{labelTable.y1}}</th>
-          <th v-on:click="sortedBy = 'ratio'">Ratio {{labelTable.y0}}</th>
+          <th v-if="notRatio" v-on:click="sortedBy = 'ratio'">Ratio {{labelTable.y0}}</th>
         </thead>
         <tbody>
           <tr v-for="dep in sortedDepData" :key="dep.id">
@@ -32,7 +32,7 @@
             <td>
               {{dep.dataAlt}}
             </td>
-            <td>
+            <td v-if="notRatio">
               {{dep.ratio}}
             </td>
           </tr>
@@ -107,6 +107,9 @@ export default {
             };
       }
     },
+    notRatio: function(){
+      return this.dataType != 'pos' && this.dataType != 'posRate';
+    },
     sortedDepData: function(){
       var that = this;
       var result = [];
@@ -119,7 +122,7 @@ export default {
           dep: dep.dep,
           data: that.depArray[dep.id][that.date][dataTag],
           dataAlt: that.depArray[dep.id][that.date][dataTagAlt],
-          ratio: that.dataType != "pos" ? Math.round(that.depArray[dep.id][that.date][ratio]*100)/100 : ""
+          ratio: that.notRatio ? Math.round(that.depArray[dep.id][that.date][ratio]*100)/100 : ""
         });
       });
       if(that.sortedBy == "id")
