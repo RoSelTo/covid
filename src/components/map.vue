@@ -18,8 +18,8 @@
         <thead>
           <th v-on:click="sortedBy = 'id'">Département</th>
           <th v-on:click="sortedBy = 'data'">{{labelTable.y0}}</th>
-          <th v-on:click="sortedBy = 'dataAlt'">{{labelTable.y1}}</th>
-          <th v-if="notRatio" v-on:click="sortedBy = 'ratio'">Ratio {{labelTable.y0}}</th>
+          <th v-on:click="sortedBy = 'ratio'">{{labelTable.y1}}</th>
+          <th v-on:click="sortedBy = 'dataAlt'">{{labelTable.y2}}</th>
         </thead>
         <tbody>
           <tr v-for="dep in sortedDepData" :key="dep.id">
@@ -30,10 +30,10 @@
               {{dep.data}}
             </td>
             <td>
-              {{dep.dataAlt}}
-            </td>
-            <td v-if="notRatio">
               {{dep.ratio}}
+            </td>
+            <td>
+              {{dep.dataAlt}}
             </td>
           </tr>
         </tbody>
@@ -45,6 +45,7 @@
 <script>
 import * as d3 from 'd3'
 import { Promise } from 'q';
+import dayjs from 'dayjs'
 export default {
   name: 'Map',
   props: {
@@ -83,27 +84,32 @@ export default {
         case "hosp":
           return {
             y0:"Hospitalisations",
-            y1: "Nouvelles hospitalisations"
+            y1: "Ratio hospitalisations",
+            y2: "Nouvelles hospitalisations"
             };
         case "rea": 
           return {
             y0:"Réanimations",
-            y1: "Nouvelles réanimations"
+            y1: "Ratio réanimations",
+            y2: "Nouvelles réanimations"
             };
         case "dc":
           return {
             y0:"Décès",
-            y1: "Nouveaux décès"
+            y1: "Ratio décès",
+            y2: "Nouveaux décès"
             };
         case "pos":
           return {
             y0:"Incidence",
-            y1: "Cas positifs"
+            y1: "Evolution (J-7)",
+            y2: "Cas positifs"
             };
         case "posRate":
           return {
             y0:"Taux de positivité",
-            y1: "Tests"
+            y1: "Evolution (J-7)",
+            y2: "Tests"
             };
       }
     },
@@ -116,13 +122,15 @@ export default {
       var dataTag = that.dataType == "pos" ? "posRatio" : that.dataType;
       var dataTagAlt = that.dataType == "pos" ? that.dataType : that.dataType == "posRate" ? "tests" : 'incid_' + that.dataType;
       var ratio = that.dataType + "Ratio";
+      var dateRef = dayjs(that.date, "YYYY-MM-DD").add(-7, "days").format("YYYY-MM-DD");
       that.depRef.forEach(function(dep){
         result.push({
           id: dep.id,
           dep: dep.dep,
           data: that.depArray[dep.id][that.date][dataTag],
           dataAlt: that.depArray[dep.id][that.date][dataTagAlt],
-          ratio: that.notRatio ? Math.round(that.depArray[dep.id][that.date][ratio]*100)/100 : ""
+          ratio: that.notRatio ? Math.round(that.depArray[dep.id][that.date][ratio]*100)/100 : 
+            Math.round((that.depArray[dep.id][that.date][dataTag] - that.depArray[dep.id][dateRef][dataTag])*100)/100
         });
       });
       if(that.sortedBy == "id")
