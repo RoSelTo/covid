@@ -26,7 +26,7 @@ export default {
           return this.data[this.date][this.field];
       },
       evolution: function(){
-          var dateBefore =  dayjs(this.date, "YYYY-MM-DD").add(-1, "days").format("YYYY-MM-DD");
+          var dateBefore =  this.field == "posRate" || this.field == "pos" ? dayjs(this.date, "YYYY-MM-DD").add(-7, "days").format("YYYY-MM-DD") : dayjs(this.date, "YYYY-MM-DD").add(-1, "days").format("YYYY-MM-DD");
           return Math.round((this.data[this.date][this.field] - this.data[dateBefore][this.field]) * 100)/100;
       },
       isBetter: function(){
