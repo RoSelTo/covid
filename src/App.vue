@@ -187,32 +187,38 @@ export default {
 
       var testData = values[3]; // test data
       var incidence = [];
+      var tests = [];
       var dep = "";
       testData.forEach(function(element) {
         if(element.cl_age90 == "0") {
           if(dep != element.dep) {
             dep = element.dep;
             incidence = [];
+            tests = [];
           }
           incidence.push(parseInt(element.P));
+          tests.push(parseInt(element.T));
           var dateFormatted = element.jour.indexOf("-") > -1 ? element.jour : dayjs(element.jour, "DD/MM/YYYY").format("YYYY-MM-DD");
           var popRatio = that.depPop[element.dep] != null ? that.depPop[element.dep].pop/100000 : 0;
           if(that.depArray[element.dep] != undefined && that.depArray[element.dep][dateFormatted] != undefined) {
             that.depArray[element.dep][dateFormatted].pos = parseInt(element.P);
             that.depArray[element.dep][dateFormatted].tests = parseInt(element.T);
-            that.depArray[element.dep][dateFormatted].posRate = Math.round((parseInt(element.P) / parseInt(element.T))*10000)/100;
             if(incidence.length == 7 && popRatio != 0) {
               that.depArray[element.dep][dateFormatted].posRatio =  Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / popRatio) * 100)/100;
+              that.depArray[element.dep][dateFormatted].posRate = Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / tests.reduce(function(a,b){return a+b;}, 0))*10000)/100;
               incidence.shift();
+              tests.shift();
             }
           } else {
             incidence.shift();
+            tests.shift();
           }
         }
       });
 
       var testNationalData = values[4]; // test national data
       incidence = [];
+      tests = [];
       testNationalData.forEach(function(element) {
         if(element.cl_age90 == "0") {
           var dateFormatted = element.jour.indexOf("-") > -1 ? element.jour : dayjs(element.jour, "DD/MM/YYYY").format("YYYY-MM-DD");
@@ -220,17 +226,20 @@ export default {
             that.incidenceDayList.push(dateFormatted);
           }
           incidence.push(parseInt(element.P));
+          tests.push(parseInt(element.T));
           var popRatio = 66774482/100000;
           if(that.totalArray != undefined && that.totalArray[dateFormatted] != undefined) {
             that.totalArray[dateFormatted].pos = parseInt(element.P);
             that.totalArray[dateFormatted].tests = parseInt(element.T);
-            that.totalArray[dateFormatted].posRate = Math.round((parseInt(element.P) / parseInt(element.T))*10000)/100;
             if(incidence.length == 7) {
               that.totalArray[dateFormatted].posRatio = Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / popRatio) *100)/100;
+              that.totalArray[dateFormatted].posRate = Math.round((incidence.reduce(function(a,b){return a+b;}, 0) / tests.reduce(function(a,b){return a+b;}, 0))*10000)/100;
               incidence.shift();
+              tests.shift();
             }
           } else {
             incidence.shift();
+            tests.shift();
           }
         }
       });
